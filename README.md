@@ -14,7 +14,7 @@ docker-compose up postgres -d
 cd backend
 mvn spring-boot:run
 ```
-Starts on http://localhost:8080
+Starts on http://localhost:8081
 Flyway runs migrations automatically — creates all tables and seeds 30 ingredients + 5 products.
 
 ### 3. Frontend
