@@ -35,8 +35,9 @@ export const useAuthStore = create<AuthState>()(
       name: 'skinsight-auth',
       // Only persist refresh token and user (access token is short-lived)
       partialize: (state) => ({
-        refreshToken: state.refreshToken,
-        user: state.user,
+          accessToken: state.accessToken,
+          refreshToken: state.refreshToken,
+          user: state.user,
       }),
     }
   )
