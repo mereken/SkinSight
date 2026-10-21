@@ -30,11 +30,14 @@ public class RuleEngineService {
 
         for (var pi : product.getProductIngredients()) {
             Ingredient ingredient = pi.getIngredient();
-            FlagType flag = resolveFlag(ingredient, skinType, allergens);
 
-            // Build explanation only for non-neutral flags
+            boolean isAllergen = matchesAllergen(ingredient, allergens);
+            FlagType flag = isAllergen ? FlagType.AVOID : resolveFlag(ingredient, skinType);
+
             if (flag != FlagType.NEUTRAL) {
-                String explanation = buildExplanation(ingredient, flag, skinType);
+                String explanation = isAllergen
+                        ? displayName(ingredient) + " matches one of your personal allergens. Avoid this product."
+                        : buildExplanation(ingredient, flag, skinType);
                 flagged.add(FlaggedIngredient.builder()
                         .ingredientId(ingredient.getId())
                         .inciName(ingredient.getInciName())
@@ -73,12 +76,19 @@ public class RuleEngineService {
                 .build();
     }
 
-    private FlagType resolveFlag(Ingredient ingredient, SkinType skinType, List<String> allergens) {
-        // Allergen check takes priority
-        if (allergens.contains(ingredient.getInciName().toUpperCase())) {
-            return FlagType.AVOID;
-        }
+    private boolean matchesAllergen(Ingredient ingredient, List<String> allergens) {
+        String inci = ingredient.getInciName() != null ? ingredient.getInciName().toUpperCase() : "";
+        String common = ingredient.getCommonName() != null ? ingredient.getCommonName().toUpperCase() : "";
 
+        for (String a : allergens) {
+            String allergen = a.trim();
+            if (allergen.length() < 3) continue; // защита: "A" не должно совпасть со всем подряд
+            if (inci.contains(allergen) || common.contains(allergen)) return true;
+        }
+        return false;
+    }
+
+    private FlagType resolveFlag(Ingredient ingredient, SkinType skinType) {
         if (skinType == null) return FlagType.NEUTRAL;
 
         return ingredient.getFlags().stream()
@@ -104,5 +114,9 @@ public class RuleEngineService {
     private String formatSkinType(SkinType skinType) {
         if (skinType == null) return "your";
         return skinType.name().toLowerCase();
+    }
+
+    private String displayName(Ingredient ingredient) {
+        return ingredient.getCommonName() != null ? ingredient.getCommonName() : ingredient.getInciName();
     }
 }

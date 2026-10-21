@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Leaf, ShieldCheck, GitCompare, Sparkles, ChevronRight } from 'lucide-react'
+import { Leaf, ShieldCheck, GitCompare, ChevronRight } from 'lucide-react'
 
 const features = [
   {
@@ -12,11 +12,7 @@ const features = [
     title: 'Compatibility Checker',
     desc: 'Select two or more products and instantly see if their ingredients conflict — before you damage your skin.',
   },
-  {
-    icon: <Sparkles className="w-6 h-6 text-primary-600" />,
-    title: 'AI Chat Assistant',
-    desc: 'Ask anything about a product\'s ingredients. Our AI assistant answers based on your skin profile.',
-  },
+
 ]
 
 const stats = [
@@ -63,7 +59,7 @@ export function LandingPage() {
       {/* Features */}
       <section className="flex flex-col gap-4">
         <h2 className="text-2xl font-bold text-gray-900 text-center">Everything you need</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-2">
           {features.map((f) => (
             <div key={f.title} className="card p-6 flex flex-col gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center">

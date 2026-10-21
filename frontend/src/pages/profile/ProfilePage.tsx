@@ -17,6 +17,17 @@ const SKIN_TYPES: { value: SkinType; label: string; desc: string; color: string 
 
 const CONDITIONS = ['acne-prone', 'rosacea', 'eczema', 'hyperpigmentation', 'dehydrated', 'aging']
 
+const COMMON_ALLERGENS: { name: string; hint: string }[] = [
+  { name: 'FRAGRANCE',             hint: 'Added scent (also listed as "Parfum"). One of the most common causes of contact allergy.' },
+  { name: 'ALCOHOL DENAT.',        hint: 'Drying solvent alcohol. Can irritate and dry out sensitive skin.' },
+  { name: 'PARABEN',               hint: 'Preservative group (methylparaben, propylparaben…). Typing PARABEN flags all of them.' },
+  { name: 'SODIUM LAURYL SULFATE', hint: 'SLS, a strong cleansing agent that can strip the skin barrier.' },
+  { name: 'PROPYLENE GLYCOL',      hint: 'Humectant and solvent. Can irritate sensitive skin.' },
+  { name: 'BENZOYL PEROXIDE',      hint: 'Acne treatment. Can cause dryness, redness and peeling.' },
+  { name: 'SALICYLIC ACID',        hint: 'BHA exfoliant. People sensitive to salicylates (like aspirin) may react.' },
+  { name: 'RETINOL',               hint: 'Vitamin A derivative. Can cause irritation and sun sensitivity.' },
+]
+
 export function ProfilePage() {
   const qc = useQueryClient()
   const { data: profile, isLoading } = useProfile()
@@ -39,13 +50,22 @@ export function ProfilePage() {
   const toggleCondition = (c: string) =>
     setConditions((prev) => prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c])
 
-  const addAllergen = () => {
-    const val = newAllergen.trim().toUpperCase()
-    if (val && !allergens.includes(val)) {
-      setAllergens((prev) => [...prev, val])
-    }
-    setNewAllergen('')
+const addAllergenValue = (raw: string) => {
+  const val = raw.trim().toUpperCase()
+  if (val.length >= 3 && !allergens.includes(val)) {
+    setAllergens((prev) => [...prev, val])
   }
+}
+
+const addAllergen = () => {
+  addAllergenValue(newAllergen)
+  setNewAllergen('')
+}
+
+// подсказка, пока пользователь печатает
+const typedHint = newAllergen.trim()
+  ? COMMON_ALLERGENS.find((a) => a.name.includes(newAllergen.trim().toUpperCase()))
+  : undefined
 
   const save = async () => {
     setSaving(true)
@@ -113,34 +133,61 @@ export function ProfilePage() {
       </Card>
 
       {/* Allergens */}
-      <Card>
-        <h2 className="font-semibold text-gray-900 mb-1">Personal allergens</h2>
-        <p className="text-xs text-gray-500 mb-4">
-          Ingredients you know you react to. These will always be flagged as AVOID.
-        </p>
-        <div className="flex flex-wrap gap-2 mb-3">
-          {allergens.map((a) => (
-            <span key={a} className="flex items-center gap-1 bg-red-50 text-red-700 border border-red-200 px-2.5 py-1 rounded-full text-xs font-medium">
-              {a}
-              <button onClick={() => setAllergens((prev) => prev.filter((x) => x !== a))}>
-                <X className="w-3 h-3 hover:text-red-900" />
-              </button>
-            </span>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <input
-            value={newAllergen}
-            onChange={(e) => setNewAllergen(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && addAllergen()}
-            placeholder="e.g. FRAGRANCE, ALCOHOL DENAT."
-            className="input text-sm flex-1"
-          />
-          <Button variant="outline" onClick={addAllergen} className="gap-1 shrink-0">
-            <Plus className="w-4 h-4" /> Add
-          </Button>
-        </div>
-      </Card>
+{/* Allergens */}
+<Card>
+  <h2 className="font-semibold text-gray-900 mb-1">Personal allergens</h2>
+  <p className="text-xs text-gray-500 mb-4">
+    Ingredients you know you react to. Any product containing a match will be flagged as AVOID.
+    You can type a full or partial name (e.g. PARABEN, FRAGRANCE, vitamin C).
+  </p>
+  <div className="flex flex-wrap gap-2 mb-3">
+    {allergens.map((a) => (
+      <span
+        key={a}
+        title={COMMON_ALLERGENS.find((c) => c.name === a)?.hint}
+        className="flex items-center gap-1 bg-red-50 text-red-700 border border-red-200 px-2.5 py-1 rounded-full text-xs font-medium"
+      >
+        {a}
+        <button onClick={() => setAllergens((prev) => prev.filter((x) => x !== a))}>
+          <X className="w-3 h-3 hover:text-red-900" />
+        </button>
+      </span>
+    ))}
+  </div>
+  <div className="flex gap-2">
+    <input
+      value={newAllergen}
+      onChange={(e) => setNewAllergen(e.target.value)}
+      onKeyDown={(e) => e.key === 'Enter' && addAllergen()}
+      placeholder="e.g. FRAGRANCE, PARABEN, vitamin C"
+      className="input text-sm flex-1"
+    />
+    <Button variant="outline" onClick={addAllergen} className="gap-1 shrink-0">
+      <Plus className="w-4 h-4" /> Add
+    </Button>
+  </div>
+
+  {typedHint && (
+    <p className="text-xs text-gray-500 mt-2">
+      <span className="font-medium text-gray-700">{typedHint.name}</span> — {typedHint.hint}
+    </p>
+  )}
+
+  <p className="text-xs font-medium text-gray-700 mt-4 mb-2">Common triggers (click to add)</p>
+  <div className="flex flex-wrap gap-2">
+    {COMMON_ALLERGENS.filter((a) => !allergens.includes(a.name)).map((a) => (
+      <button
+        key={a.name}
+        type="button"
+        title={a.hint}
+        onClick={() => addAllergenValue(a.name)}
+        className="px-2.5 py-1 rounded-full text-xs border border-gray-200 text-gray-600 hover:border-primary-300 hover:text-primary-700 transition"
+      >
+        + {a.name}
+      </button>
+    ))}
+  </div>
+</Card>
 
       {/* Save */}
       <div className="flex items-center gap-3">
